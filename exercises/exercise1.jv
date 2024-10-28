@@ -1,0 +1,67 @@
+// Exercise 1: Automated Data Pipeline for Airports Data
+// 
+// Objective:
+// - Download airport data from the provided URL 
+// - https://opendata.rhein-kreis-neuss.de/api/v2/catalog/datasets/rhein-kreis-neuss-flughafen-weltweit/exports/csv
+// - Write data into a SQLite database called "airports.sqlite" in a table named "airports".
+// - Use appropriate SQLite types (e.g., BIGINT, TEXT, DECIMAL) for all columns.
+// - Retain original column names and data without any validation or modification.
+
+pipeline AirportsPipeline {
+
+  // Define the pipeline steps:
+  // 1. Extract data from URL -> 2. Interpret as text -> 3. Interpret as CSV -> 
+  // 4. Interpret as table with specific column types -> 5. Load into SQLite database.
+  
+  AirportsExtractor 
+    -> AirportsTextFileInterpreter
+    -> AirportsCSVInterpreter
+    -> AirportsTableInterpreter
+    -> AirportsDatabaseLoader;
+  
+  // Block 1: HTTP Extractor
+  // This block fetches data from the specified URL in CSV format.
+  block AirportsExtractor oftype HttpExtractor {
+    url: 'https://opendata.rhein-kreis-neuss.de/api/explore/v2.1/catalog/datasets/rhein-kreis-neuss-flughafen-weltweit/exports/csv?lang=en&timezone=Europe%2FBerlin&use_labels=true&delimiter=%3B';
+  }
+
+  // Block 2: Text File Interpreter
+  // Reads the HTTP response as plain text, enabling CSV parsing in the next step.
+  block AirportsTextFileInterpreter oftype TextFileInterpreter { }
+
+  // Block 3: CSV Interpreter
+  // Interprets the text as CSV, using ';' as the delimiter (as specified in the source).
+  block AirportsCSVInterpreter oftype CSVInterpreter {
+    delimiter: ';';
+  }
+
+  // Block 4: Table Interpreter
+  // Interprets the data as a table, with column headers and specific types for each column.
+  block AirportsTableInterpreter oftype TableInterpreter {
+    header: true; // Specifies that the first row contains column headers.
+    
+    columns: [
+      // Column mappings, assigning each column an appropriate SQLite data type.
+      "Lfd. Nummer" oftype integer,
+      "Name des Flughafens" oftype text,
+      "Ort" oftype text,
+      "Land" oftype text,
+      "IATA" oftype text,
+      "ICAO" oftype text,
+      "Latitude" oftype decimal,
+      "Longitude" oftype decimal,
+      "Altitude" oftype integer,
+      "Zeitzone" oftype decimal,
+      "DST" oftype text,
+      "Zeitzonen-Datenbank" oftype text,
+      "geo_punkt" oftype text                         
+    ];
+  }
+
+  // Block 5: SQLite Database Loader
+  // Loads the data into a SQLite database file ("airports.sqlite") in a table called "airports".
+  block AirportsDatabaseLoader oftype SQLiteLoader {
+    table: 'airports';         // Table name in SQLite database
+    file: './airports.sqlite';  // Path to the SQLite file to be created or updated
+  }
+}
