@@ -1,56 +1,69 @@
-//Exercise-1:
-//	Build an automated data pipeline for the following source:
-//		https://opendata.rhein-kreis-neuss.de/api/v2/catalog/datasets/rhein-kreis-neuss-flughafen-weltweit/exports/csv
-//
-//Goal:
-//	Write data into a SQLite database called “airports.sqlite”, in the table “airports”"
-//	Assign fitting built-in SQLite types (e.g., BIGINT, TEXT or FLOAT) to all columns
-//	Do not rename column names!
-//	No further data validation is required, do not drop any rows or change any data points
-//
+// Exercise: 1
+// Build an automated data pipeline for the following source
+// https://opendata.rhein-kreis-neuss.de/api/explore/v2.1/catalog/datasets/rhein-kreis-neuss-flughafen-weltweit/exports/csv?lang=en&timezone=Europe%2FBerlin&use_labels=true&delimiter=%3B
+
+// Goal:
+// Write data into a SQLite database called “airports.sqlite”, in the table “airports”
+// Do not save the following columns, Zeitzone, DST, Zeitzonen-Datenbank, geo_punkt
+// Assign fitting built-in SQLite types (e.g., BIGINT, TEXT or FLOAT) to all other columns
+Do not rename column names
+No further data validation is required, do not drop any rows or change any data points
+
+
+
+// Exercise-1: Automated Data Pipeline for Airports Data
+// Do not rename column names
+// No further data validation is required, do not drop any rows or change any data points
 
 
 pipeline AirportsPipeline {
 
-	// Pipeline
+	// Define the pipeline sequence, moving data through multiple interpreters to process and load it.
 	AirportsExtractor 
 		-> AirportsTextFileInterpreter
 		-> AirportsCSVInterpreter
 		-> AirportsTableInterpreter
 		-> AirportsDatabaseLoader;
-	
-	// Get CSV file
+
+	// Block 1: HTTP Extractor
+	// This block fetches data from the specified URL in CSV format.
 	block AirportsExtractor oftype HttpExtractor {
 		url: 'https://opendata.rhein-kreis-neuss.de/api/explore/v2.1/catalog/datasets/rhein-kreis-neuss-flughafen-weltweit/exports/csv?lang=en&timezone=Europe%2FBerlin&use_labels=true&delimiter=%3B';
 	}
-	// Text Interpreter
+
+	// Block 2: Text File Interpreter
+	// Reads the data as plain text, preparing it for CSV interpretation.
 	block AirportsTextFileInterpreter oftype TextFileInterpreter { }
 
-	// CSV Interpreter
+	// Block 3: CSV Interpreter
+	// Processes the text as CSV, using a semicolon (';') as the delimiter for this dataset.
 	block AirportsCSVInterpreter oftype CSVInterpreter {
 		delimiter: ';';
 	}
 
-	// Table Interpreter
+	// Block 4: Table Interpreter
+	// Configures the structure of the data table by specifying each column's SQLite type.
 	block AirportsTableInterpreter oftype TableInterpreter {
-		header: true;
+		header: true; // Indicates that the first row contains column headers.
+		
 		columns: [
-			"Lfd. Nummer" oftype integer,
-            "Name des Flughafens" oftype text,
-            "Ort" oftype text,
-            "Land" oftype text,
-            "IATA" oftype text,
-            "ICAO" oftype text,
-            "Latitude" oftype decimal,
-            "Longitude" oftype decimal,
-            "Altitude" oftype integer
-            
+			// Column names and their corresponding data types in SQLite.
+			"Lfd. Nummer" oftype integer,                   // Unique identifier (integer)
+			"Name des Flughafens" oftype text,              // Name of airport (text)
+			"Ort" oftype text,                              // Location or city (text)
+			"Land" oftype text,                             // Country (text)
+			"IATA" oftype text,                             // IATA code (text)
+			"ICAO" oftype text,                             // ICAO code (text)
+			"Latitude" oftype decimal,                      // Latitude coordinate (decimal)
+			"Longitude" oftype decimal,                     // Longitude coordinate (decimal)
+			"Altitude" oftype integer                       // Altitude in feet (integer)
 		];
 	}
 
-	// Generate the SQLITE database
+	// Block 5: SQLite Database Loader
+	// Loads the interpreted data into a SQLite database in the specified table and file.
 	block AirportsDatabaseLoader oftype SQLiteLoader {
-		table: 'airports';
-		file: './airports.sqlite';
+		table: 'airports';         // Name of the table to store the data
+		file: './airports.sqlite';  // Path and name of the SQLite file
 	}
 }
