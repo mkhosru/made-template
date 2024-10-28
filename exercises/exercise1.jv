@@ -1,39 +1,38 @@
-//Exercise-1:
-//	Build an automated data pipeline for the following source:
-//		https://opendata.rhein-kreis-neuss.de/api/v2/catalog/datasets/rhein-kreis-neuss-flughafen-weltweit/exports/csv
+// Exercise-1:
+// Build an automated data pipeline for the following source:
+//     https://opendata.rhein-kreis-neuss.de/api/v2/catalog/datasets/rhein-kreis-neuss-flughafen-weltweit/exports/csv
 //
-//Goal:
-//	Write data into a SQLite database called “airports.sqlite”, in the table “airports”"
-//	Assign fitting built-in SQLite types (e.g., BIGINT, TEXT or FLOAT) to all columns
-//	Do not rename column names!
-//	No further data validation is required, do not drop any rows or change any data points
-//
-
+// Goal:
+// Write data into a SQLite database called “airports.sqlite”, in the table “airports”
+// Assign fitting built-in SQLite types (e.g., BIGINT, TEXT, or FLOAT) to all columns
+// Do not rename column names!
+// No further data validation is required; do not drop any rows or change any data points.
 
 pipeline AirportsPipeline {
 
-	// Pipeline
+	// Define the pipeline sequence for processing the data
 	AirportsExtractor 
 		-> AirportsTextFileInterpreter
 		-> AirportsCSVInterpreter
 		-> AirportsTableInterpreter
 		-> AirportsDatabaseLoader;
 	
-	// Get CSV file
+	// Block 1: Download CSV data from the specified URL
 	block AirportsExtractor oftype HttpExtractor {
 		url: 'https://opendata.rhein-kreis-neuss.de/api/explore/v2.1/catalog/datasets/rhein-kreis-neuss-flughafen-weltweit/exports/csv?lang=en&timezone=Europe%2FBerlin&use_labels=true&delimiter=%3B';
 	}
-	// Text Interpreter
+	
+	// Block 2: Interpret the data as plain text for further parsing
 	block AirportsTextFileInterpreter oftype TextFileInterpreter { }
 
-	// CSV Interpreter
+	// Block 3: Interpret the plain text data as a CSV file using ';' as the delimiter
 	block AirportsCSVInterpreter oftype CSVInterpreter {
 		delimiter: ';';
 	}
 
-	// Table Interpreter
+	// Block 4: Convert the CSV data into table format with specified column types
 	block AirportsTableInterpreter oftype TableInterpreter {
-		header: true;
+		header: true;  // Use the first row as header for column names
 		columns: [
 			"Lfd. Nummer" oftype integer,
             "Name des Flughafens" oftype text,
@@ -44,13 +43,12 @@ pipeline AirportsPipeline {
             "Latitude" oftype decimal,
             "Longitude" oftype decimal,
             "Altitude" oftype integer
-            
 		];
 	}
 
-	// Generate the SQLITE database
+	// Block 5: Load the table data into an SQLite database file
 	block AirportsDatabaseLoader oftype SQLiteLoader {
-		table: 'airports';
-		file: './airports.sqlite';
+		table: 'airports';         // Table name in the SQLite database
+		file: './airports.sqlite';  // Path to the SQLite file
 	}
 }
