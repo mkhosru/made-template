@@ -13,12 +13,11 @@
 // Drop all rows with invalid values
 // Assign fitting built-in SQLite types (e.g., BIGINT, TEXT or FLOAT) to all columns
 // Write data into a SQLite database called “trees.sqlite”, in the table “trees”
-// Use Jayvee version 0.6.3
-// Submit as /exercises/exercise2.jv
+
 
 pipeline TreePipeline {
 
-	// Pipeline
+	// Pipeline to process and load tree planting data into SQLite database
 	TreeExtractor 
 		-> TreeTextFileInterpreter
 		-> TreeCSVInterpreter
@@ -26,19 +25,20 @@ pipeline TreePipeline {
 		-> TreeTableInterpreter
 		-> TreeDatabaseLoader;
 	
-	// Get CSV file
+	// TreeExtractor: Extracts the CSV file from the provided URL
 	block TreeExtractor oftype HttpExtractor {
 		url: 'https://opendata.rhein-kreis-neuss.de/api/v2/catalog/datasets/stadt-neuss-herbstpflanzung-2023/exports/csv';
 	}
-	// Text Interpreter
+	
+	// TreeTextFileInterpreter: Reads the CSV content as plain text
 	block TreeTextFileInterpreter oftype TextFileInterpreter { }
 
-	// CSV Interpreter
+	// TreeCSVInterpreter: Interprets the plain text as CSV using ';' as delimiter
 	block TreeCSVInterpreter oftype CSVInterpreter {
 		delimiter: ';';
 	}
 
-	// Table Interpreter
+	// Table Interpreter without documentation as requested
 	block TreeTableInterpreter oftype TableInterpreter {
 		header: true;
 		columns: [
@@ -51,32 +51,35 @@ pipeline TreePipeline {
 		];
 	}
 
+    // BauColumnDeleter: Removes the 'baumart_deutsch' column (Column E)
     block BauColumnDeleter oftype ColumnDeleter {
-        delete: [column E];
+        delete: [column E]; 
     }
 
-	// Generate the SQLITE database
+	// TreeDatabaseLoader: Loads the cleaned and processed data into a SQLite database table 'trees'
 	block TreeDatabaseLoader oftype SQLiteLoader {
-		table: 'trees';
-		file: './trees.sqlite';
+		table: 'trees'; 
+		file: './trees.sqlite'; // Output database file
 	}
 
-    // Update constraint for "Vogelsang"
+    // Constraint to allow only 'stadtteil' values starting with 'Vogelsang'
     constraint VogelsangAllow oftype RegexConstraint {
         regex: /^Vogelsang/;
     }
 
+    // Value type definition to apply the 'Vogelsang' constraint
     valuetype VogelsangAllowConstrain oftype text {
-    // 10. Valuetypes can be further refined by providing constraints.
         constraints: [
             VogelsangAllow,
         ];
     }
 
+    // Constraint for valid geo-coordinate patterns in the 'id' column
     constraint GeoAllow oftype RegexConstraint {
         regex: /([0-9]{1,3}\.[0-9]+), ([0-9]{1,3}\.[0-9]+)/;
     }
 
+    // Value type definition for geo-coordinates using the 'GeoAllow' constraint
     valuetype GeoAllowConstrain oftype text {
         constraints: [
             GeoAllow,
