@@ -1,8 +1,7 @@
 # Project Plan
 
 ## Title
-Bike-Sharing Demand in North American Cities: The Role of Climate Impact on Urban Mobility
-Awesome MADE project.
+Analyzing Bike-Sharing Demand in North American Cities: The Role of Climate Impact on Urban Mobility.
 
 ## Main Question
 
