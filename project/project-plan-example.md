@@ -17,7 +17,7 @@ Urban bike-sharing systems are transforming city transportation by offering eco-
 
 <!-- Describe each datasources you plan to use in a section. Use the prefic "DatasourceX" where X is the id of the datasource. -->
 
-### Datasource1: ExampleSource
+### Datasource1: Capital Bikeshare Dataset (Washington, D.C.)
 * Metadata URL: https://archive.ics.uci.edu/dataset/275/bike+sharing+dataset
 * Data URL: https://archive.ics.uci.edu/static/public/275/bike+sharing+dataset.zip
 * Data Type: Zip -> CSV
