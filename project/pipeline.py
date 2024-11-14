@@ -37,18 +37,18 @@ class Pipeline:
 
 
     def transform_data(self):
-        self.data1.drop(self.data1.columns[0], axis=1, inplace=True)  # Deleting instant as it is just an index
-        self.data1.dropna(thresh=3)  # Deleting a row if it has 3 or more NA values
-        self.data1.bfill()  # Filling the remaining NA values backward (Imputation)
+        self.data1.drop(self.data1.columns[0], axis=1, inplace=True)  # Drop the first column since it's an index
+        self.data1.dropna(thresh=3)  # Remove rows with 3 or more NA values
+        self.data1.bfill()  # Fill remaining NA values with backward fill method
         
-        self.data2.dropna(thresh=3)  # Deleting a row if it has more 3 or more NA values
-        self.data2.bfill()  # Filling the remaining NA values backward (Imputation)
+        self.data2.dropna(thresh=3)  # For the second dataset, remove rows with 3 or more NA values
+        self.data2.bfill()  # Fill remaining NA values with backward fill method
 
     def save_data(self):
-        self.data1.to_sql("Capital Bikeshare", self.engine, if_exists='replace', index=False)  # saving Capital Bikeshare data
-        self.data2.to_sql("Seoul Bikeshare", self.engine, if_exists='replace', index=False)  # saving Seoul Bikeshare data
+        self.data1.to_sql("Capital Bikeshare", self.engine, if_exists='replace', index=False)  # Save the Capital Bikeshare data to SQLite
+        self.data2.to_sql("Seoul Bikeshare", self.engine, if_exists='replace', index=False)  # Save the Seoul Bikeshare data to SQLite
 
-        for pa in self.files_to_delete:  # Removing downloaded and extracted data
+        for pa in self.files_to_delete:  # Delete downloaded and extracted files after saving
             os.remove(pa)
         
         self.engine.dispose()
@@ -70,7 +70,7 @@ def get_data_helper(url, idx, filename):
     if response.status_code == 200:
         filename = filename + ".zip"
 
-        # Write the downloaded content to the file
+        # Save the downloaded file content to disk
         with open(filename, 'wb') as f:
             f.write(response.content)
 

@@ -22,8 +22,14 @@ Urban bike-sharing systems are transforming city transportation by offering eco-
 * Data URL: https://archive.ics.uci.edu/static/public/275/bike+sharing+dataset.zip
 * Data Type: Zip -> CSV
 
-*This dataset includes hourly and daily bike rental counts from 2011 to 2012, along with corresponding weather and seasonal data, providing a foundation for analyzing factors that influence Capital Bikeshare rentals
+This dataset includes hourly and daily bike rental counts from 2011 to 2012, along with corresponding weather and seasonal data, providing a foundation for analyzing factors that influence Capital Bikeshare rentals
 
+### Datasource1: Seoul Bike Sharing Demand
+* Metadata URL: https://archive.ics.uci.edu/dataset/560/seoul+bike+sharing+demand
+* Data URL: https://archive.ics.uci.edu/static/public/560/seoul+bike+sharing+demand.zip
+* Data Type: Zip -> CSV
+
+The dataset provides hourly rental bike counts in Seoul from 2017 to 2018, along with corresponding weather data and holiday information. It can be used to analyze factors influencing Seoul Bike Sharing System.
 
 ## Work Packages
 
