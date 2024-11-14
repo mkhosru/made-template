@@ -1,3 +1,4 @@
+# question
 # Follow your project plan to build an automated data pipeline for your project
 #     Write a script (for example in Python or Jayvee) that pulls the data sets you chose from the internet, transforms it and fixes errors, and finally stores your data in the /data directory
 #         Place the script in the /project directory (any file name is fine)
@@ -8,8 +9,8 @@
 #     The output of the script should be: datasets in your /data directory (e.g., as SQLite databases)
 #         Do NOT check in your data sets, just your script
 #         You can use .gitignore to avoid checking in files on git
-#         This data set will be the base for your data report in future project work
-# Update the issues and project plan if necessary
+#         This data set will be the base for your data report in future project work.
+# Update the issues and project plan if necessary............
 
 
 import pandas as pd
