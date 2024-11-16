@@ -1,0 +1,70 @@
+pipeline CountryStatsPipeline {
+
+    countryDataExtractor
+        -> countryExcelInterpreter
+        -> sheetRangeExtractor
+        -> headerRenamer
+        -> tableProcessor
+        -> bondIssuanceLoader
+        -> gdpPerCapitaLoader;
+
+    block countryDataExtractor oftype HttpExtractor {
+        url: "https://thedocs.worldbank.org/en/doc/7d852628d96b9411d43e5d36d5dff941-0050062022/original/Graphs-Chapter-5-02082022.xlsx";
+    }
+
+    // Use the correct Excel interpreter block type
+    block countryExcelInterpreter oftype SpreadsheetInterpreter {}
+
+    // Use correct range extractor type and syntax
+    block sheetRangeExtractor oftype RangeSelector {
+        sheet: "Figure S5.1.2";
+        range: "P2:S45";
+    }
+
+    // Rename headers
+    block headerRenamer oftype CellWriter {
+        at: range "P1:S1";
+        write: ["Country Code", "Economy", "GDP per Capita", "Bond Issuance Share"];
+    }
+
+    // Define constraints for data validation
+    constraint PositiveDecimal on decimal:
+        value > 0;
+
+    valuetype PositiveDecimalType oftype decimal {
+        constraints: [
+            PositiveDecimal,
+        ];
+    }
+
+    constraint BondShareRange on decimal:
+        value >= 0 and value <= 1;
+
+    valuetype BondShareType oftype decimal {
+        constraints: [
+            BondShareRange,
+        ];
+    }
+
+    // Define the table structure with built-in value type for country code
+    block tableProcessor oftype TableInterpreter {
+        header: true;
+        columns: [
+            "Country Code" oftype CountryCodeAlpha3,
+            "Economy" oftype text,
+            "GDP per Capita" oftype PositiveDecimalType,
+            "Bond Issuance Share" oftype BondShareType
+        ];
+    }
+
+    // Remove the invalid "columns" property in SQLiteLoader blocks
+    block bondIssuanceLoader oftype SQLiteLoader {
+        table: "bondIssuance";
+        file: "./country-stats.sqlite";
+    }
+
+    block gdpPerCapitaLoader oftype SQLiteLoader {
+        table: "gdpPerCapita";
+        file: "./country-stats.sqlite";
+    }
+}
