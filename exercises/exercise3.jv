@@ -1,4 +1,4 @@
-pipeline WorldBankPipeline {
+pipeline EconomicStatsPipeline {
 
     //  Data Extraction and Processing Flow
     DataDownloader
