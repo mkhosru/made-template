@@ -1,70 +1,90 @@
-pipeline CountryStatsPipeline {
+pipeline EconomicStatsPipeline {
 
-    countryDataExtractor
-        -> countryExcelInterpreter
-        -> sheetRangeExtractor
-        -> headerRenamer
-        -> tableProcessor
-        -> bondIssuanceLoader
-        -> gdpPerCapitaLoader;
+    // Workflow: Data extraction and processing
+    DownloadData
+        -> InterpretExcel
+        -> PickTargetSheet
+        -> SelectRange
+        -> UpdateHeaders
+        -> ProcessGDPData
+        -> SaveGDPData;
 
-    block countryDataExtractor oftype HttpExtractor {
+    SelectRange  
+        -> ProcessBondData
+        -> SaveBondData;
+
+    // Step 1: Fetch the dataset from the given URL
+    block DownloadData oftype HttpExtractor {
         url: "https://thedocs.worldbank.org/en/doc/7d852628d96b9411d43e5d36d5dff941-0050062022/original/Graphs-Chapter-5-02082022.xlsx";
     }
 
-    // Use the correct Excel interpreter block type
-    block countryExcelInterpreter oftype SpreadsheetInterpreter {}
+    // Step 2: Interpret the Excel file format
+    block InterpretExcel oftype XLSXInterpreter {}
 
-    // Use correct range extractor type and syntax
-    block sheetRangeExtractor oftype RangeSelector {
-        sheet: "Figure S5.1.2";
-        range: "P2:S45";
+    // Step 3: Select the desired sheet
+    block PickTargetSheet oftype SheetPicker {
+        sheetName: "Figure S5.1.2";
     }
 
-    // Rename headers
-    block headerRenamer oftype CellWriter {
-        at: range "P1:S1";
-        write: ["Country Code", "Economy", "GDP per Capita", "Bond Issuance Share"];
+    // Step 4: Define the range of cells to focus on
+    block SelectRange oftype CellRangeSelector {
+        select: range P2:S45;
     }
 
-    // Define constraints for data validation
-    constraint PositiveDecimal on decimal:
-        value > 0;
-
-    valuetype PositiveDecimalType oftype decimal {
-        constraints: [
-            PositiveDecimal,
+    // Step 5: Adjust headers for clarity
+    block UpdateHeaders oftype CellWriter {
+        at: range P1:S1;  
+        write: [
+            "Country Code",
+            "Economy",
+            "GDP per Capita",
+            "Bond Issuance Share"
         ];
     }
 
-    constraint BondShareRange on decimal:
-        value >= 0 and value <= 1;
-
-    valuetype BondShareType oftype decimal {
-        constraints: [
-            BondShareRange,
-        ];
-    }
-
-    // Define the table structure with built-in value type for country code
-    block tableProcessor oftype TableInterpreter {
+    // Step 6: Process GDP data with validation
+    block ProcessGDPData oftype TableInterpreter {
         header: true;
         columns: [
             "Country Code" oftype CountryCodeAlpha3,
-            "Economy" oftype text,
-            "GDP per Capita" oftype PositiveDecimalType,
-            "Bond Issuance Share" oftype BondShareType
+            "GDP per Capita" oftype GDPValueValidator
         ];
     }
 
-    // Remove the invalid "columns" property in SQLiteLoader blocks
-    block bondIssuanceLoader oftype SQLiteLoader {
-        table: "bondIssuance";
-        file: "./country-stats.sqlite";
+    // Step 7: Process Bond Issuance data with validation
+    block ProcessBondData oftype TableInterpreter {
+        header: true;
+        columns: [
+            "Country Code" oftype CountryCodeAlpha3,
+            "Bond Issuance Share" oftype BondShareValidator
+        ];
     }
 
-    block gdpPerCapitaLoader oftype SQLiteLoader {
+    // Step 8: Save GDP data to a database
+    block SaveGDPData oftype SQLiteLoader {
         table: "gdpPerCapita";
         file: "./country-stats.sqlite";
     }
+
+    // Step 9: Save Bond Issuance data to a database
+    block SaveBondData oftype SQLiteLoader {
+        table: "bondIssuance";
+        file: "./country-stats.sqlite";
+    }
+}
+
+// Validation Rules
+constraint GDPPositiveValue on GDPValueValidator:
+    value > 0;
+
+constraint BondValueInRange on BondShareValidator:
+    value >= 0 and value <= 1;
+
+// Data Validation Types
+valuetype GDPValueValidator oftype decimal {
+    constraints: [GDPPositiveValue];
+}
+
+valuetype BondShareValidator oftype decimal {
+    constraints: [BondValueInRange];
 }
