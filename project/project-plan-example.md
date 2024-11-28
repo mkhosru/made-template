@@ -1,35 +1,35 @@
 # Project Plan
 
 ## Title
-Analyzing Bike-Sharing Demand in North American Cities: The Role of Climate Impact on Urban Mobility.
+Analyzing the Relationship Between Current Health Expenditure and GDP Growth in south America.
 
 ## Main Question
 
 <!-- Think about one main question you want to answer based on the data. -->
-In what ways do climate factors—such as temperature, humidity, and wind speed—shape bike rental demand and impact urban mobility patterns in North America?
+How does Current health expenditure as a percentage of GDP influence economic growth in South American countries between 2014 and 2023?
 
 ## Description
 
 <!-- Describe your data science project in max. 200 words. Consider writing about why and how you attempt it. -->
-Urban bike-sharing systems are transforming city transportation by offering eco-friendly, carbon-reducing alternatives that curb fossil fuel reliance. Systems like Capital Bikeshare and Seoul Bike Sharing highlight this trend, emphasizing the need to understand what drives bike rental demand. This study analyzes key weather factors—temperature, humidity, and wind speed—using datasets from two cities across different countries to uncover patterns in bike rentals. Our aim is to develop a predictive model for daily or hourly demand, offering actionable insights for enhancing bike-sharing efficiency, ensuring availability, and supporting sustainable urban mobility
+This project investigates the relationship between Current health expenditure as a percentage of GDP and economic growth in south America. Using World Bank data on health spending and GDP growth, the study analyzes trends and applies statistical method, including correlation model, to explore potential causality. By identifying how health investments impact economic performance, the research provides insights to guide policymakers in optimizing healthcare spending for sustainable growth.
 
 ## Datasources
 
 <!-- Describe each datasources you plan to use in a section. Use the prefic "DatasourceX" where X is the id of the datasource. -->
 
-### Datasource1: Capital Bikeshare Dataset (Washington, D.C.)
-* Metadata URL: https://archive.ics.uci.edu/dataset/275/bike+sharing+dataset
-* Data URL: https://archive.ics.uci.edu/static/public/275/bike+sharing+dataset.zip
+### Datasource1: Current health expenditure (% of GDP) (Worldbank )
+* Metadata URL: https://data.worldbank.org/indicator/SH.XPD.CHEX.GD.ZS
+* Data URL: https://api.worldbank.org/v2/en/indicator/SH.XPD.CHEX.GD.ZS?downloadformat=csv
 * Data Type: Zip -> CSV
 
-This dataset includes hourly and daily bike rental counts from 2011 to 2012, along with corresponding weather and seasonal data, providing a foundation for analyzing factors that influence Capital Bikeshare rentals
+The dataset includes global records of Current health expenditure as a share of GDP. For this study, the focus is narrowed to south America, extracting data from 2014 to 2023. This data is used to explore trends and analyze the impact of health spending on economic growth within the region.
 
-### Datasource1: Seoul Bike Sharing Demand
-* Metadata URL: https://archive.ics.uci.edu/dataset/560/seoul+bike+sharing+demand
-* Data URL: https://archive.ics.uci.edu/static/public/560/seoul+bike+sharing+demand.zip
+### Datasource1: GDP growth (annual %)(Worldbank )
+* Metadata URL: https://data.worldbank.org/indicator/NY.GDP.MKTP.KD.ZG
+* Data URL: https://api.worldbank.org/v2/en/indicator/NY.GDP.MKTP.KD.ZG?downloadformat=csv
 * Data Type: Zip -> CSV
 
-The dataset provides hourly rental bike counts in Seoul from 2017 to 2018, along with corresponding weather data and holiday information. It can be used to analyze factors influencing Seoul Bike Sharing System.
+This dataset provides annual GDP growth rates for countries across south America from 2014 to 2023. It serves as a key resource for analyzing economic performance and studying the relationship between GDP growth and health expenditure in the region
 
 ## Work Packages
 

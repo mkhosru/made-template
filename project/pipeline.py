@@ -1,94 +1,74 @@
-# question
-# Follow your project plan to build an automated data pipeline for your project
-#     Write a script (for example in Python or Jayvee) that pulls the data sets you chose from the internet, transforms it and fixes errors, and finally stores your data in the /data directory
-#         Place the script in the /project directory (any file name is fine)
-#         Add a /project/pipeline.sh that starts your pipeline as you would do from the command line as entry point:
-#             E.g. if you run your script on your command line using `python3 /project/pipeline.py`, create a /project/pipeline.sh with the content:
-#                     #!/bin/bash
-#                     python3 /project/pipeline.py
-#     The output of the script should be: datasets in your /data directory (e.g., as SQLite databases)
-#         Do NOT check in your data sets, just your script
-#         You can use .gitignore to avoid checking in files on git
-#         This data set will be the base for your data report in future project work.
-# Update the issues and project plan if necessary............
-
-
+import os
+import zipfile
+import requests
 import pandas as pd
-import requests, os
-from zipfile import ZipFile
-from sqlalchemy import create_engine
+import sqlite3
+from io import BytesIO
 
+# Define directories
+data_directory = "./data"
+if not os.path.exists(data_directory):
+    os.makedirs(data_directory)
 
-class Pipeline:
-    def __init__(self, url1, url2, save_file_name):
-        self.url1 = url1
-        self.url2 = url2
-        self.data1 = None
-        self.data2 = None
-        path = 'sqlite:///data//' + save_file_name + '.sqlite'
-        self.engine = create_engine(path, echo=False)
-        self.files_to_delete = []
+# South American countries list
+south_american_countries = [
+    "Argentina", "Bolivia", "Brazil", "Chile", "Colombia", "Ecuador",
+    "Guyana", "Paraguay", "Peru", "Suriname", "Uruguay", "Venezuela, RB"
+]
 
-    def get_data(self):
-        self.data1, items_to_delete1 = get_data_helper(self.url1, 2, "Capital Bikeshare")
-        self.data2, items_to_delete2 = get_data_helper(self.url2, 0, "Seoul Bikeshare")
-        self.files_to_delete.extend(items_to_delete1)
-        self.files_to_delete.extend(items_to_delete2)
+# URLs for GDP growth and current health expenditure data from World Bank
+url_gdp_zip = "https://api.worldbank.org/v2/en/indicator/NY.GDP.MKTP.KD.ZG?downloadformat=csv"
+url_health_zip = "https://api.worldbank.org/v2/en/indicator/SH.XPD.CHEX.GD.ZS?downloadformat=csv"  # Current health expenditure link
 
-
-    def transform_data(self):
-        self.data1.drop(self.data1.columns[0], axis=1, inplace=True)  # Drop the first column since it's an index
-        self.data1.dropna(thresh=3)  # Remove rows with 3 or more NA values
-        self.data1.bfill()  # Fill remaining NA values with backward fill method
-        
-        self.data2.dropna(thresh=3)  # For the second dataset, remove rows with 3 or more NA values
-        self.data2.bfill()  # Fill remaining NA values with backward fill method
-
-    def save_data(self):
-        self.data1.to_sql("Capital Bikeshare", self.engine, if_exists='replace', index=False)  # Save the Capital Bikeshare data to SQLite
-        self.data2.to_sql("Seoul Bikeshare", self.engine, if_exists='replace', index=False)  # Save the Seoul Bikeshare data to SQLite
-
-        for pa in self.files_to_delete:  # Delete downloaded and extracted files after saving
-            os.remove(pa)
-        
-        self.engine.dispose()
-
-    def run_pipeline(self):
-        self.get_data()
-        print("Got the Datasets!")
-        self.transform_data()
-        print("Datasets Transformed!")
-        self.save_data()
-        print("Datasets Saved!")
-
-
-def get_data_helper(url, idx, filename):
-    """Helper function to get the data, as we may use it get data from several urls"""
-    print("Downloading", url)
+# Function to download and extract ZIP files
+def download_and_extract_zip(url, output_dir):
     response = requests.get(url)
-
     if response.status_code == 200:
-        filename = filename + ".zip"
-
-        # Save the downloaded file content to disk
-        with open(filename, 'wb') as f:
-            f.write(response.content)
-
-        # Extract the CSV file from the zip
-        with ZipFile(filename, 'r') as zip_ref:
-            csv_filename = zip_ref.namelist()[idx]  # Get the csv file name
-            zip_ref.extract(csv_filename)  # Extract the file
-
-        # Load the extracted CSV file into a pandas DataFrame
-        df = pd.read_csv(csv_filename, encoding='unicode_escape')
-
-        return df, [filename, csv_filename]
+        with zipfile.ZipFile(BytesIO(response.content)) as z:
+            z.extractall(output_dir)
+            print(f"Extracted files to {output_dir}")
+            csv_files = [f for f in z.namelist() if f.endswith(".csv") and "Metadata" not in f]
+            return [os.path.join(output_dir, f) for f in csv_files]
     else:
-        print(f"Download failed for {url}. Status code: {response.status_code}")
+        print(f"Failed to download data from {url}.")
+        return []
 
+# Process CSV file to filtering and reshaping
+def clean_and_reshape_data(file_path, countries, years):
+    df = pd.read_csv(file_path, skiprows=4)
+    # Filter countries and select years
+    df_filtered = df[df["Country Name"].isin(countries)][["Country Name", "Country Code"] + years]
+    # Reshape from wide to long format
+    df_long = df_filtered.melt(
+        id_vars=["Country Name", "Country Code"],
+        var_name="Year",
+        value_name="Value"
+    )
+    df_long["Year"] = df_long["Year"].astype(int)  # Ensure 'Year' is integer
+    return df_long
 
-if __name__ == '__main__':
-    pipe = Pipeline("https://archive.ics.uci.edu/static/public/275/bike+sharing+dataset.zip",
-                    "https://archive.ics.uci.edu/static/public/560/seoul+bike+sharing+demand.zip",
-                    "bike_data")
-    pipe.run_pipeline()
+# Save cleaned data to SQLite
+def export_to_sqlite(df, table_name, db_path):
+    with sqlite3.connect(db_path) as conn:
+        df.to_sql(table_name, conn, if_exists="replace", index=False)
+    print(f"Saved table '{table_name}' to SQLite database at {db_path}.")
+
+# Download, process, and save GDP data
+gdp_files = download_and_extract_zip(url_gdp_zip, data_directory)
+health_files = download_and_extract_zip(url_health_zip, data_directory)
+
+# Filter years
+years = [str(year) for year in range(2014, 2024)]  # Years from 2014 to 2023
+
+# Clean and reshape data
+if gdp_files:
+    gdp_cleaned = clean_and_reshape_data(gdp_files[0], south_american_countries, years)
+    gdp_cleaned.to_csv(os.path.join(data_directory, "gdp_cleaned_south_america.csv"), index=False)
+    print("Cleaned GDP data for South America saved as CSV.")
+    export_to_sqlite(gdp_cleaned, "gdp_data_south_america", os.path.join(data_directory, "data_cleaned_south_america.db"))
+
+if health_files:
+    health_cleaned = clean_and_reshape_data(health_files[0], south_american_countries, years)
+    health_cleaned.to_csv(os.path.join(data_directory, "health_cleaned_south_america.csv"), index=False)
+    print("Cleaned Current Health Expenditure data for South America saved as CSV.")
+    export_to_sqlite(health_cleaned, "health_expenditure_data_south_america", os.path.join(data_directory, "data_cleaned_south_america.db"))
