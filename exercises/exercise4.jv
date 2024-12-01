@@ -1,0 +1,128 @@
+// === Reusable Constraints ===
+
+// Constraint to ensure values are greater than zero
+constraint PositiveValue on integer:
+    value > 0;
+
+// Constraint to enforce valid month range (1 to 12)
+constraint MonthWithinRange on integer:
+    value >= 1 and value <= 12;
+
+
+// === Reusable Value Types ===
+
+// Value type for positive integers (enforced by PositiveValue constraint)
+valuetype PositiveInteger oftype integer {
+    constraints: [PositiveValue]; 
+}
+
+// Value type for months, constrained to valid month range (1-12)
+valuetype MonthValue oftype integer {
+    constraints: [MonthWithinRange]; 
+}
+
+
+// === Transform Function: Celsius to Fahrenheit Conversion ===
+
+// This transform function converts temperature from Celsius to Fahrenheit
+// Formula: Fahrenheit = (Celsius * 9/5) + 32
+transform CelsiusToFahrenheit
+{
+  from celsius oftype decimal;  // Input in Celsius (decimal format)
+  to fahrenheit oftype decimal;  // Output in Fahrenheit (decimal format)
+
+  fahrenheit: (celsius * 9/5) + 32;  // The conversion formula
+}
+
+
+// === Temperature Processing Pipeline ===
+
+pipeline TemperatureProcessing {
+
+    // Download the dataset in ZIP format
+    block tempDataExtractor oftype HttpExtractor {
+        url: "https://www.mowesta.com/data/measure/mowesta-dataset-20221107.zip"; // The URL from which to fetch the data
+    }
+
+    // Unzip the downloaded data
+    block zipFileInterpreter oftype ArchiveInterpreter {
+        archiveType: "zip";  // Specifies the type of archive (ZIP)
+    }
+
+    // Extract the CSV file from the unzipped contents
+    block csvFilePicker oftype FilePicker {
+        path: "/data.csv"; // Path to the CSV file after extraction
+    }
+
+    // Interpret the file as a plain text file
+    block interpretTextFile oftype TextFileInterpreter {}
+
+    // Parse the file as CSV with a specific delimiter
+    block interpretCSVFile oftype CSVInterpreter {
+        delimiter: ";";  // Defines the delimiter used in the CSV file
+    }
+
+    // Rename the columns in the CSV file to standard English names
+    block renameOtherColumns oftype CellWriter {
+        at: range A1:E1;  
+        write: [
+            "id",  
+            "producer",  
+            "model",  
+            "month",  
+            "temperature"  
+        ];
+    }
+
+    // Rename the battery temperature header to match the required field
+    block renameBatteryTemperatureHeader oftype CellWriter { 
+        at: cell J1;  
+        write: ["battery_temperature"];  
+    }
+
+    // Interpret the data into a structured table format with appropriate types
+    block interpretDataTable oftype TableInterpreter {
+        header: true;  
+        columns: [
+            "id" oftype PositiveInteger,             
+            "producer" oftype text,  
+            "model" oftype text,  
+            "month" oftype MonthValue,        
+            "temperature" oftype decimal,  
+            "battery_temperature" oftype decimal  
+        ];
+    }
+
+    // Convert the 'temperature' column from Celsius to Fahrenheit
+    block convertTemperatureToF oftype TableTransformer {
+        inputColumns: ['temperature'];  
+        outputColumn: 'temperature';  
+        uses: CelsiusToFahrenheit;  
+    }
+
+    // Convert the 'battery_temperature' column from Celsius to Fahrenheit
+    block convertBatteryTempToF oftype TableTransformer {
+        inputColumns: ['battery_temperature'];  
+        outputColumn: 'battery_temperature';  
+        uses: CelsiusToFahrenheit;  
+    }
+
+    // Finally, load the processed data into a SQLite database
+    block loadToSQLite oftype SQLiteLoader {
+        table: 'temperatures';  
+        file: 'temperatures.sqlite';  
+    }
+
+    // Connect all the blocks in the pipeline to process the data step-by-step
+    tempDataExtractor
+        -> zipFileInterpreter
+        -> csvFilePicker
+        -> interpretTextFile
+        -> interpretCSVFile
+        -> renameOtherColumns
+        -> renameBatteryTemperatureHeader
+        -> interpretDataTable
+        -> convertTemperatureToF
+        -> convertBatteryTempToF
+        -> loadToSQLite;
+}
