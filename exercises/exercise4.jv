@@ -1,18 +1,18 @@
-// reusable constraint 
-constraint GreaterThanZero on integer:
+// Reusable constraint 
+constraint PositiveValue on integer: 
     value > 0;
 
-// reusable constraint for month range (1 to 12)
-constraint ValidMonthRange on integer:
+// Reusable constraint for month range (1 to 12)
+constraint MonthRange on integer: 
     value >= 1 and value <= 12;
 
-//  reusable valuetypes applying the constraints
+// Reusable valuetypes applying the constraints
 valuetype IdType oftype integer {
-    constraints: [GreaterThanZero]; 
+    constraints: [PositiveValue]; 
 }
 
 valuetype MonthType oftype integer {
-    constraints: [ValidMonthRange]; 
+    constraints: [MonthRange]; 
 }
 
 // Transform Function: Celsius to Fahrenheit conversion
@@ -26,45 +26,43 @@ transform TempConvert
 
 pipeline TemperaturePipeline {
 
-    //  Download the ZIP file
-    block TemperatureExtractor oftype HttpExtractor {
+    // Block for downloading the data file
+    block DataFileDownloader oftype HttpExtractor {
         url: "https://www.mowesta.com/data/measure/mowesta-dataset-20221107.zip";
     }
 
-    // Unzip the data
-    block TemperatureArchiveInterpreter oftype ArchiveInterpreter {
+    // Unzip the data file
+    block ArchiveExtractor oftype ArchiveInterpreter {
         archiveType: "zip";
     }
 
-    //  Pick the CSV file ("data.csv") from the unzipped contents
-    block TemperatureFilePicker oftype FilePicker {
+    // Select the CSV file
+    block CSVFileSelector oftype FilePicker {
         path: "/data.csv";
     }
 
-    block TemperatureFileInterpreter oftype TextFileInterpreter{}
-    block TemperatureCSVInterpreter oftype CSVInterpreter {
+    // Interpret the data as text
+    block TextDataInterpreter oftype TextFileInterpreter {}
+
+    // Parse the CSV file
+    block CSVDataInterpreter oftype CSVInterpreter {
         delimiter: ";";
     }
 
-       // “Batterietemperatur in °C” to “battery_temperature”
-    block TemperaturesCellWriter oftype CellWriter { 
-        at:cell J1; 
-        write:["battery_temperature"];
-        }
-
-    //  Rename columns from German to English
-    block ColumnRenamer oftype CellWriter {
-        at: range A1:E1;
-        write:["id", 
-        "producer",  
-        "model",     
-        "month",     
-        "temperature"
-        ];
+    // Rename the battery temperature column
+    block RenameBatteryTemperature oftype CellWriter { 
+        at: cell J1; 
+        write: ["battery_temperature"];
     }
 
-    //  Interpret the data into a table format with correct types
-    block TemperatureTableInterpreter oftype TableInterpreter {
+    // Rename other columns to English
+    block RenameOtherColumns oftype CellWriter {
+        at: range A1:E1;
+        write: ["id", "producer", "model", "month", "temperature"];
+    }
+
+    // Interpret the data into a table format
+    block DataTableInterpreter oftype TableInterpreter {
         header: true;
         columns: [
             "id" oftype IdType,             
@@ -76,36 +74,36 @@ pipeline TemperaturePipeline {
         ];
     }
 
-    // Transform the temperature column (Celsius to Fahrenheit)
-    block TemperatureTransformer oftype TableTransformer {
+    // Convert the temperature to Fahrenheit
+    block TempToFahrenheit oftype TableTransformer {
         inputColumns: ['temperature'];
         outputColumn: 'temperature';
         uses: TempConvert;
     }
 
-    // Transform the battery_temperature column (Celsius to Fahrenheit)
-    block BatteryTemperatureTransformer oftype TableTransformer {
+    // Convert the battery temperature to Fahrenheit
+    block BatteryTempToFahrenheit oftype TableTransformer {
         inputColumns: ['battery_temperature'];
         outputColumn: 'battery_temperature';
         uses: TempConvert;
     }
 
-    // Load the data into a SQLite database
-    block TemperatureSQLiteLoader oftype SQLiteLoader {
+    // Load the data into SQLite database
+    block SQLiteDataLoader oftype SQLiteLoader {
         table: 'temperatures';
         file: 'temperatures.sqlite';
     }
 
-    // Connect the blocks in the pipeline
-    TemperatureExtractor
-        -> TemperatureArchiveInterpreter
-        -> TemperatureFilePicker
-        -> TemperatureFileInterpreter
-        -> TemperatureCSVInterpreter
-        -> TemperaturesCellWriter
-        -> ColumnRenamer
-        -> TemperatureTableInterpreter
-        -> TemperatureTransformer
-        -> BatteryTemperatureTransformer
-        -> TemperatureSQLiteLoader;
+    // Connect the blocks in sequence:
+    DataFileDownloader
+        -> ArchiveExtractor
+        -> CSVFileSelector
+        -> TextDataInterpreter
+        -> CSVDataInterpreter
+        -> RenameBatteryTemperature
+        -> RenameOtherColumns
+        -> DataTableInterpreter
+        -> TempToFahrenheit
+        -> BatteryTempToFahrenheit
+        -> SQLiteDataLoader;
 }
