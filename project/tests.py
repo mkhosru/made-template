@@ -86,7 +86,7 @@ class TestDataPipeline(unittest.TestCase):
 
     def test_database_exist(self):
         """Test if database exists after pipeline execution."""
-        print(f"Looking for pipeline.py at: {os.path.abspath('./pipeline.py')}")
+        print(f"Looking for pipeline.py at: {os.path.abspath('./project/pipeline.py')}")
 
         subprocess.run(['python', './pipeline.py'], check=True)
         self.assertTrue(
