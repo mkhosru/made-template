@@ -86,30 +86,13 @@ class TestDataPipeline(unittest.TestCase):
 
     def test_database_exist(self):
         """Test if database exists after pipeline execution."""
-        # Print the current working directory for debugging (optional)
-        print(f"Current working directory: {os.getcwd()}")
+        print(f"Looking for pipeline.py at: {os.path.abspath('./pipeline.py')}")
 
-        # Update this line to the correct path
-        pipeline_path = os.path.abspath('./pipeline.py')  # Correct path here
-
-        # Print a custom message when pipeline is found
-        print("Pipeline found and executing...")
-
-        # Run the pipeline script
-        try:
-            subprocess.run(['python', pipeline_path], check=True)
-        except subprocess.CalledProcessError as e:
-            self.fail(f"Pipeline execution failed with error: {e}")
-    
-        # Generate the absolute path for the database
-        db_path = os.path.abspath('./data/data_cleaned_south_america.db')
-    
-        # Assert the database exists
+        subprocess.run(['python', './pipeline.py'], check=True)
         self.assertTrue(
-        os.path.exists(db_path),
-        f"Failure: Database {db_path} does not exist. Success: Database creation verified."
+        os.path.exists('./data/data_cleaned_south_america.db'),
+        f"Failure: Database ./data/data_cleaned_south_america.db does not exist. Success: Database ./data/data_cleaned_south_america.db exists."
     )
-
 
 
 if __name__ == '__main__':
