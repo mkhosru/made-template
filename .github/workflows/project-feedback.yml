@@ -39,7 +39,7 @@ jobs:
       - name: Execute tests.sh
         run: chmod +x ./project/tests.sh  # Ensure tests.sh is executable
 
-      # Step 7: Run the pipeline (e.g., the pipeline script generating data)
+      # Step 7: Run the pipeline (e.g. the pipeline script generating data)
       - name: Run pipeline.py
         run: |
           python ./project/pipeline.py  # Run pipeline.py to generate files (CSV, SQLite)
