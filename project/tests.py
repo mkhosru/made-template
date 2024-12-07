@@ -41,7 +41,7 @@ class TestDataPipeline(unittest.TestCase):
         # Assert no blank columns in health expenditure data
         self.assertTrue(
             not health_df.isnull().all(axis=0).any(),
-            "Blank columns found in health expenditure data."
+            "Blank columns found in health expenditure data"
         )
 
         # Assert no blank columns in GDP growth data
