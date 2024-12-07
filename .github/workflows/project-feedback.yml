@@ -1,4 +1,4 @@
-name: Continuous Integration (CI)
+name: project-feedback (CI)
 
 on:
   push:
@@ -34,14 +34,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y curl bash
 
-      # Step 5: Debug - Check Working Directory and Files
-      - name: Debug - Check Working Directory and Files
-        run: |
-          pwd
-          ls -l ./data  # List files in the ./data directory to check if any files are missing
-
-      # Step 6: Make tests.sh executable
-      - name: Make tests.sh executable
+      
+      # Step 6: Execute tests.sh 
+      - name: Execute tests.sh
         run: chmod +x ./project/tests.sh  # Ensure tests.sh is executable
 
       # Step 7: Run the pipeline (e.g., the pipeline script generating data)
