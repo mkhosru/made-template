@@ -21,21 +21,34 @@ jobs:
       - name: Set up Python 3
         uses: actions/setup-python@v2
         with:
-          python-version: '3.x'  # You can specify 3.8, 3.9, etc., if needed
+          python-version: '3.x'  # Automatically use the latest Python version 3.x (e.g., 3.11, 3.10)
 
       # Step 3: Install dependencies from the 'project/requirements.txt'
       - name: Install dependencies
         run: |
           pip install -r project/requirements.txt  # Path to the requirements.txt in the 'project' folder
+
       # Step 4: Install necessary system packages (curl, bash, etc.)
       - name: Install necessary packages
         run: |
           sudo apt-get update
           sudo apt-get install -y curl bash
-      # Step 5: Make tests.sh executable
-      - name: Make tests.sh executable
-        run: chmod +x ./project/tests.sh
 
-      # Step 6: Run the tests.sh script
+      # Step 5: Debug - Check Working Directory and Files
+      - name: Debug - Check Working Directory and Files
+        run: |
+          pwd
+          ls -l ./data  # List files in the ./data directory to check if any files are missing
+
+      # Step 6: Make tests.sh executable
+      - name: Make tests.sh executable
+        run: chmod +x ./project/tests.sh  # Ensure tests.sh is executable
+
+      # Step 7: Run the pipeline (e.g., the pipeline script generating data)
+      - name: Run pipeline.py
+        run: |
+          python ./project/pipeline.py  # Run pipeline.py to generate files (CSV, SQLite)
+
+      # Step 8: Run tests.sh script to verify functionality
       - name: Run tests.sh
-        run: ./project/tests.sh
+        run: ./project/tests.sh  # Execute the tests
