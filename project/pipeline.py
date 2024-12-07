@@ -45,6 +45,10 @@ def clean_and_reshape_data(file_path, countries, years):
         value_name="Value"
     )
     df_long["Year"] = df_long["Year"].astype(int)  # Ensure 'Year' is integer
+
+    # Fix: Assign back to avoid FutureWarning
+    df_long["Value"] = df_long["Value"].fillna(0)
+
     return df_long
 
 # Save cleaned data to SQLite
