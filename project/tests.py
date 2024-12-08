@@ -43,12 +43,14 @@ class TestDataPipeline(unittest.TestCase):
             not health_df.isnull().all(axis=0).any(),
             "Blank columns found in health expenditure data."
         )
+        print("Test success: No blank columns found in health expenditure data.")
 
         # Assert no blank columns in GDP growth data
         self.assertTrue(
             not gdp_df.isnull().all(axis=0).any(),
             "Blank columns found in GDP growth data."
         )
+        print("Test success: No blank columns found in GDP growth data.")
 
     def test_data_reshaped(self):
             """Test if the data was reshaped into long format correctly."""
