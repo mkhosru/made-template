@@ -36,6 +36,7 @@ class TestDataPipeline(unittest.TestCase):
             f"Failure: {self.db_path} does not exist. Success: {self.db_path} exists."
         )
         print(f"Success: {self.db_path} exists.")
+        print(f"All test passed successfully")
 
     def test_blank_column_removed(self):
         """Test if blank columns were removed from the datasets."""
@@ -113,8 +114,8 @@ class TestDataPipeline(unittest.TestCase):
             os.path.exists(self.db_path),
             f"Failure: Database not found at {self.db_path}."
         )
-        print(f"Success: Database at {self.db_path} exists.")
-        print(f"All test passed successfully")
+        #print(f"Success: Database at {self.db_path} exists.")
+        
 
 
 
