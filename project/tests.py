@@ -5,42 +5,6 @@ import pandas as pd
 
 class TestDataPipeline(unittest.TestCase):
 
-    def test_database_exist(self):
-        pipeline_path = os.path.abspath('./project/pipeline.py')
-        print(f"Looking for pipeline script at: {pipeline_path}")
-        
-        # Ensure pipeline script exists
-        self.assertTrue(
-            os.path.isfile(pipeline_path),
-            f"Failure: pipeline.py not found at {pipeline_path}."
-        )
-        
-        # Run the pipeline script and suppress raw logs
-        try:
-            print("Running the data pipeline...")
-            result = subprocess.run(
-                ['python', pipeline_path],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                check=True
-            )
-            # Optionally log captured output for debugging purposes
-            # print(result.stdout)
-            print("Pipeline ran successfully.")
-        except subprocess.CalledProcessError as e:
-            print(e.stderr)  # Print the error if something goes wrong
-            self.fail(f"Pipeline script execution failed with error: {e}")
-
-        # Verify the database exists
-        self.assertTrue(
-            os.path.exists(self.db_path),
-            f"Failure: Database not found at {self.db_path}."
-        )
-        print(f"Success: Database at {self.db_path} exists.")
-        print(f"Success: {self.gdp_file} exists.")
-        print(f"Success: {self.health_file} exists.")
-
     def setUp(self):
         # File paths and URLs
         self.output_dir = './data'
@@ -125,7 +89,32 @@ class TestDataPipeline(unittest.TestCase):
         )
             print("Test success: No missing values found in GDP growth data.")
 
-    
+    def test_database_exist(self):
+        pipeline_path = os.path.abspath('./project/pipeline.py')  # Adjusted path
+        print(f"Looking for pipeline script at: {pipeline_path}")
+        
+        # Ensure pipeline script exists
+        self.assertTrue(
+            os.path.isfile(pipeline_path),
+            f"Failure: pipeline.py not found at {pipeline_path}."
+        )
+        
+        
+        # Run the pipeline script
+        try:
+            print("Running the data pipeline...")
+            subprocess.run(['python', './project/pipeline.py'], check=True)  # Corrected path
+            print("Pipeline ran successfully.")
+        except subprocess.CalledProcessError as e:
+            self.fail(f"Pipeline script execution failed with error: {e}")
+        
+        # Verify the database exists
+        self.assertTrue(
+            os.path.exists(self.db_path),
+            f"Failure: Database not found at {self.db_path}."
+        )
+        print(f"Success: Database at {self.db_path} exists.")
+        print(f"All test passed successfully")
 
 
 
