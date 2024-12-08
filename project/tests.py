@@ -41,7 +41,7 @@ class TestDataPipeline(unittest.TestCase):
         # Assert no blank columns in health expenditure data
         self.assertTrue(
             not health_df.isnull().all(axis=0).any(),
-            "Blank columns found in health expenditure data."
+            "Blank columns found in health expenditure data"
         )
 
         # Assert no blank columns in GDP growth data
@@ -83,14 +83,30 @@ class TestDataPipeline(unittest.TestCase):
     )
     print("Test success: No missing values found in GDP growth data.")
 
+
     def test_database_exist(self):
-        """Test if database exists after pipeline execution."""
-        print(f"Running pipeline from: {os.path.abspath('./pipeline.py')}")
-        subprocess.run(['python', './pipeline.py'], check=True)
+        pipeline_path = os.path.abspath('./pipeline.py')  # Adjust this based on the correct path
+        print(f"Running pipeline script at: {pipeline_path}")
+        
+        # Check if the pipeline script exists
         self.assertTrue(
-        os.path.exists('./data/data_cleaned_south_america.db'),
-        f"Failure: Database ./data/data_cleaned_south_america.db does not exist. Success: Database ./data/data_cleaned_south_america.db exists."
-    )
+            os.path.isfile(pipeline_path),
+            f"Failure: pipeline.py not found at {pipeline_path}."
+        )
+        
+        # Run the pipeline script
+        try:
+            subprocess.run(['python', pipeline_path], check=True)
+        except subprocess.CalledProcessError as e:
+            self.fail(f"Pipeline script execution failed with error: {e}")
+        
+        # Check if the database exists
+        self.assertTrue(
+            os.path.exists(self.db_path),
+            f"Failure: Database not found at {self.db_path}."
+        )
+        print(f"Success: Database at {self.db_path} exists.")
+
 
 
 if __name__ == '__main__':
