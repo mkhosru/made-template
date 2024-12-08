@@ -114,6 +114,7 @@ class TestDataPipeline(unittest.TestCase):
             f"Failure: Database not found at {self.db_path}."
         )
         print(f"Success: Database at {self.db_path} exists.")
+        print(f"All test passed successfully")
 
 
 
