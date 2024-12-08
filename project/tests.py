@@ -51,21 +51,37 @@ class TestDataPipeline(unittest.TestCase):
         )
 
     def test_data_reshaped(self):
-        """Test if the data was reshaped into long format correctly."""
-        health_df = pd.read_csv(self.health_file)
-        gdp_df = pd.read_csv(self.gdp_file)
+            """Test if the data was reshaped into long format correctly."""
+            health_df = pd.read_csv(self.health_file)
+            gdp_df = pd.read_csv(self.gdp_file)
 
-        # Assert that 'Year' and 'Value' columns exist in health expenditure data
-        self.assertTrue(
+            # Assert that 'Year' and 'Value' columns exist in health expenditure data
+            self.assertTrue(
             'Year' in health_df.columns and 'Value' in health_df.columns,
             "Health expenditure data reshaping failed. 'Year' and 'Value' columns missing."
         )
+            print("Test success: 'Year' and 'Value' columns found in health expenditure data.")
 
-        # Assert that 'Year' and 'Value' columns exist in GDP growth data
-        self.assertTrue(
+            # Assert that 'Year' and 'Value' columns exist in GDP growth data
+            self.assertTrue(
             'Year' in gdp_df.columns and 'Value' in gdp_df.columns,
             "GDP growth data reshaping failed. 'Year' and 'Value' columns missing."
         )
+            print("Test success: 'Year' and 'Value' columns found in GDP growth data.")
+
+            # Test for missing values in health expenditure data
+            self.assertTrue(
+            not health_df.isnull().any().any(),
+            "Health expenditure data contains missing values."
+        )
+            print("Test success: No missing values found in health expenditure data.")
+
+            # Test for missing values in GDP growth data
+            self.assertTrue(
+            not gdp_df.isnull().any().any(),
+            "GDP growth data contains missing values."
+        )
+            print("Test success: No missing values found in GDP growth data.")
 
     def test_database_exist(self):
         pipeline_path = os.path.abspath('./project/pipeline.py')  # Adjusted path
