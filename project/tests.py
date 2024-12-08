@@ -14,10 +14,12 @@ class TestDataPipeline(unittest.TestCase):
 
     def test_health_expenditure_file_exists(self):
         """Test if the health expenditure file exists after running the pipeline."""
+        
         self.assertTrue(
             os.path.isfile(self.health_file),
             f"Failure: {self.health_file} does not exist. Success: {self.health_file} exists."
         )
+        print(f"Success: {self.health_file} exists.")
 
     def test_gdp_growth_file_exists(self):
         """Test if the GDP growth file exists after running the pipeline."""
@@ -25,6 +27,7 @@ class TestDataPipeline(unittest.TestCase):
             os.path.isfile(self.gdp_file),
             f"Failure: {self.gdp_file} does not exist. Success: {self.gdp_file} exists."
         )
+        print(f"Success: {self.gdp_file} exists.")
 
     def test_sqlite_db_exists(self):
         """Test if the SQLite database file exists after running the pipeline."""
@@ -32,6 +35,7 @@ class TestDataPipeline(unittest.TestCase):
             os.path.isfile(self.db_path),
             f"Failure: {self.db_path} does not exist. Success: {self.db_path} exists."
         )
+        print(f"Success: {self.db_path} exists.")
 
     def test_blank_column_removed(self):
         """Test if blank columns were removed from the datasets."""
@@ -95,9 +99,12 @@ class TestDataPipeline(unittest.TestCase):
             f"Failure: pipeline.py not found at {pipeline_path}."
         )
         
+        
         # Run the pipeline script
         try:
+            print("Running the data pipeline...")
             subprocess.run(['python', './project/pipeline.py'], check=True)  # Corrected path
+            print("Pipeline ran successfully.")
         except subprocess.CalledProcessError as e:
             self.fail(f"Pipeline script execution failed with error: {e}")
         
